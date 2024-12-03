@@ -1,16 +1,11 @@
-from sklearn.model_selection import train_test_split
-from sklearn.linear_model import LogisticRegression
-import pandas as pd
+from sklearn.ensemble import RandomForestClassifier
 
 class ModeloML:
     def __init__(self):
-        self.modelo = LogisticRegression()
+        self.modelo = RandomForestClassifier()
 
-    def treinar(self, dados_treinamento):
-        X = dados_treinamento.iloc[:, :-1]  # Features
-        y = dados_treinamento.iloc[:, -1]   # Target
-        self.modelo.fit(X, y)
+    def treinar(self, X_train, y_train):
+        self.modelo.fit(X_train, y_train)
 
-    def prever(self, dados_teste):
-        X_teste = dados_teste.iloc[:, :-1]  # Features
-        return self.modelo.predict(X_teste)
+    def testar(self, X_test):
+        return self.modelo.predict(X_test)

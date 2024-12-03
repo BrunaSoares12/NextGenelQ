@@ -1,37 +1,42 @@
-from scripts.modelo import ModeloML
+from sklearn.model_selection import train_test_split
+
 from scripts.processamento import ProcessamentoDNA
+from scripts.modelo import ModeloML
 from scripts.metricas import Metricas
-from utils.download_dados import download_dados
-
-
-def main():
-    # Baixar os dados
-    download_dados()
-
-    # Processar os dados
-    processador = ProcessamentoDNA('data/dataset.csv')
-    dados_treinamento, dados_teste = processador.carregar_dados()
-
-    # Treinamento do modelo
-    modelo = ModeloML()
-    modelo.treinar(dados_treinamento)
-
-    # Avaliar o modelo
-    predições = modelo.prever(dados_teste)
-    metricas = Metricas(dados_teste, predições)
-    resultado_metricas = metricas.calcular_metricas()
-
-    print("Resultados das Métricas:", resultado_metricas)
-
+from scripts.download_dados import Downloader
 
 if __name__ == "__main__":
-    main()
+    # Baixar os dados
+    downloader = Downloader("singhakash/dna-sequencing-with-machine-learning", "data")
+    downloader.autenticar()
+    downloader.baixar_dados()
 
-    # Explicação para bruno e bibi
-    # dataset.csv: É o arquivo de dados.Para um teste inicial, criei um arquivo CSV com colunas e dados fictícios.
-    # main.py: O script principal que orquestra o processo de download, processamento, treinamento e avaliação.
-    # metricas.py: Tem a classe Metricas para calcular precisão, sensibilidade e acurácia.
-    # modelo.py: Define a classe ModeloML com funções para treinar e prever.
-    # processamento.py: Carrega e divide o dataset.
-    # download_dados.py: Baixa o arquivo CSV do Kaggle para a pasta data/.
-    # Para baixar as dependencias, é só clicar em cima de cada import em uma lupa vermelha e instalar o que pedir (fazer isso para todos os arquivos menos o CSV)
+
+    # Processar os dados
+    processamento = ProcessamentoDNA("data/dataset.csv")
+    dados = processamento.carregar_dados()
+    dados = processamento.preprocessar(dados)
+
+    # Separar variáveis de entrada e saída
+    X = dados.iloc[:, :-1]  # Todas as colunas menos a última
+    y = dados.iloc[:, -1]   # Última coluna
+
+    # Dividir os dados em treino e teste
+    X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.3, random_state=42)
+
+    # Treinar o modelo
+    modelo = ModeloML()
+    modelo.treinar(X_train, y_train)
+
+    # Testar o modelo
+    y_pred = modelo.testar(X_test)
+
+    # Calcular as métricas
+    metricas = Metricas()
+    sensibilidade = metricas.calcular_sensibilidade(y_test, y_pred)
+    especificidade = metricas.calcular_especificidade(y_test, y_pred)
+    precisao = metricas.calcular_precisao(y_test, y_pred)
+
+    print(f"Sensibilidade: {sensibilidade}")
+    print(f"Especificidade: {especificidade}")
+    print(f"Precisão: {precisao}")
